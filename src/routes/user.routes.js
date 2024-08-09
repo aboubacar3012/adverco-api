@@ -7,6 +7,7 @@ const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 
 const User = require("../model/user.model");
+const Partner = require("../model/partner.model");
 
 // send sms
 // router.post("/sendsms", async (request, response) => {
@@ -83,7 +84,7 @@ router.post("/create", async (request, response) => {
         .status(200)
         .json({ success: false, message: "Veuillez remplir tous les champs" });
     }
-    const { firstName, lastName, email, role, phone, password } =
+    const { firstName, lastName, email, role, phone, password, partnerId } =
       request.body;
     const findUser = await User.findOne({ email });
     if (findUser) {
@@ -100,10 +101,20 @@ router.post("/create", async (request, response) => {
       role,
       phone,
       password,
+      partnerId,
     });
 
-    await user.save();
-    response.json({ success: true, user });
+    const partner = await Partner.findById(partnerId);
+    if (partner) {
+      partner?.users?.push(user._id);
+      await partner.save();
+      await user.save();
+      console.log(partner);
+      console.log(user);
+      response.json({ success: true, user });
+    }
+
+   
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });
   }

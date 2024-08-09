@@ -54,7 +54,22 @@ const partnerSchema = new mongoose.Schema({
       ref: "users",
     },
   ],
-
+  campaigns: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "campaigns",
+    },
+  ],
+  invoicesUrl: [{
+    type: String,
+    required: false,
+    default: "",
+  }],
+  contractsUrl: [{
+    type: String,
+    required: false,
+    default: "",
+  }],
   createdAt: {
     default: Date.now,
     type: Date,

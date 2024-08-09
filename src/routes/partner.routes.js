@@ -22,6 +22,34 @@ router.get("/", async (request, response) => {
   }
 });
 
+// Get partner by ID
+router.get("/:id", async (request, response) => {
+  try {
+    const partnerId = request.params.id;
+    // verifier si l'id est valid
+    if (!mongoose.isValidObjectId(partnerId))
+      return response.status(200).json({
+        success: false,
+        message: "l'ID de cet partner n'existe pas",
+      });
+
+    const partner = await Partner.findById(partnerId)
+      .populate("users")
+      .populate("campaigns")
+      .lean(); // convert to json
+    if (partner) {
+      return response.status(200).json({ success: true, partner });
+    }
+    else {
+      return response
+        .status(200)
+        .json({ success: false, message: "Utilisateur non trouvé" });
+    }
+  } catch (e) {
+    return response.status(200).json({ success: false, error: e.message });
+  }
+});
+
 // get partner by ID
 // router.get("/:id", middleware.isAuthenticated, (request, response) => {
 //   try {
@@ -135,7 +163,7 @@ router.put("/update/:id", (request, response) => {
 
 // Delete partner
 // middleware.isAuthenticated,
-router.delete("/delete/:id",  (request, response) => {
+router.delete("/delete/:id", (request, response) => {
   try {
     const partnerId = request.params.id;
     // verifier si l'id est valid

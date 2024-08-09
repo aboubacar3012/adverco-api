@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 
 const Campaign = require("../model/campaign.model");
+const Partner = require("../model/partner.model");
 
 // Get all campaigns
 router.get("/", async (request, response) => {
@@ -92,7 +93,12 @@ router.post("/create", async (request, response) => {
       numberOfFaces,
     });
 
-    await campaign.save();
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return response.status(404).json({ success: false, message: "Partenaire non trouvé" });
+    }
+    partner.campaigns.push(campaign._id);
+    await Promise.all([campaign.save(), partner.save()]);
     response.json({ success: true, campaign });
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });
@@ -153,13 +159,17 @@ router.put("/update/data/:id", async (request, response) => {
       // Filtrer les données pour vérifier les duplications
     const existingData = campaign.data;
     let newData = [];
-    for (let i = 0; i < existingData.length; i++) {
-      const foundDuplicate = data.find((data) => data.startDate === existingData[i].startDate && data.endDate === existingData[i].endDate);
-      if (!foundDuplicate) {
-        newData.push(existingData[i]);
-      }else{
-        return response.status(200).json({ success: false, message: "Vous essayez d'insérer des données qui existent déjà" });
+    if(existingData && existingData.length > 0) {
+      for (let i = 0; i < data.length; i++) {
+        const foundDuplicate = existingData.find((existingData) => existingData.startDate === data[i].startDate && existingData.endDate === data[i].endDate);
+        if (!foundDuplicate) {
+          newData.push(data[i]);
+        }else{
+          return response.status(200).json({ success: false, message: "Vous essayez d'insérer des données qui existent déjà" });
+        }
       }
+    }else{
+      newData = data;
     }
       
     // Ajouter les nouvelles données
