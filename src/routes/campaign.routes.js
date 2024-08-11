@@ -189,6 +189,41 @@ router.put("/update/data/:id", async (request, response) => {
   }
 });
 
+// Update report
+router.put("/update/report/:id", async (request, response) => {
+  try {
+    const campaignId = request.params.id;
+    const report = request.body;
+
+    // verifier si l'id est valid
+    if (!mongoose.isValidObjectId(campaignId))
+      return response.status(200).json({
+        success: false,
+        message: "l'ID de cette campaign n'existe pas",
+      });
+
+      const campaign = await Campaign.findById(campaignId);
+
+      if (!campaign) {
+        return response.status(404).json({ success: false, message: "Campagne non trouvé" });
+      }
+
+    campaign.report = report;
+
+    // Sauvegarder la campagne mise à jour
+    const updatedCampaign = await campaign.save();
+
+    return response.status(200).json({
+      campaign: updatedCampaign,
+      success: true,
+      message: "Mise à jour réussie avec succès",
+    });
+
+  } catch (e) {
+    return response.status(200).json({ success: false, error: e.message });
+  }
+});
+
 // Delete campaign
 // middleware.isAuthenticated,
 router.delete("/delete/:id",  (request, response) => {

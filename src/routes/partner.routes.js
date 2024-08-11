@@ -189,4 +189,95 @@ router.delete("/delete/:id", (request, response) => {
   }
 });
 
+// Invoices and Contracts
+
+// Add invoice or contract
+router.post("/add/:type/:id", async (request, response) => {
+  try {
+    const partnerId = request.params.id;
+    const type = request.params.type;
+    const body = request.body;
+    body.createdAt = new Date();
+    body.updatedAt = new Date();
+    body.type = type;
+    // verifier si l'id est valid
+    if (!mongoose.isValidObjectId(partnerId))
+      return response.status(200).json({
+        success: false,
+        message: "l'ID de cet partner n'existe pas",
+      });
+
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return response.status(200).json({
+        success: false,
+        message: "Partenaire non trouvé",
+      });
+    }
+
+    if(type !== "invoice" && type !== "contract") {
+      return response.status(200).json({
+        success: false,
+        message: "Type de document invalide",
+      });
+    }
+
+    if(type === "invoice") {
+      partner?.invoices.push(body);
+    }else if(type === "contract") {
+      partner?.contracts.push(body);
+    }
+
+    const updatedPartner = await partner?.save();
+    
+    return response.status(200).json({ success: true, partner:updatedPartner });
+
+  } catch (e) {
+    return response.status(200).json({ success: false, error: e.message });
+  }
+})
+
+// delete invoice or contract
+router.delete("/delete/:type/:partnerId/:docId", async (request, response) => {
+  try {
+    const partnerId = request.params.partnerId;
+    const type = request.params.type;
+    const docId = request.params.docId;
+    // verifier si l'id est valid
+    if (!mongoose.isValidObjectId(partnerId))
+      return response.status(200).json({
+        success: false,
+        message: "l'ID de cet partner n'existe pas",
+      });
+
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return response.status(200).json({
+        success: false,
+        message: "Partenaire non trouvé",
+      });
+    }
+
+    if(type !== "invoice" && type !== "contract") {
+      return response.status(200).json({
+        success: false,
+        message: "Type de document invalide",
+      });
+    }
+
+    if(type === "invoice") {
+      partner?.invoices.pull(docId); // cela supprime l'élément du tableau par son id
+    }else if(type === "contract") {
+      partner?.contracts.pull(docId);
+    }
+
+    const updatedPartner = await partner?.save();
+    
+    return response.status(200).json({ success: true, partner:updatedPartner });
+
+  } catch (e) {
+    return response.status(200).json({ success: false, error: e.message });
+  }
+})
+
 module.exports = router;

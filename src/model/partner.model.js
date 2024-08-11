@@ -1,5 +1,39 @@
 const mongoose = require("mongoose");
 
+const invoiceAndContractsSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    required: true,
+    enum: ["invoice", "contract"],
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  link: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: String,
+    required: true,
+  },
+  amount: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    default: Date.now,
+    type: Date,
+    required: true,
+  },
+  updatedAt: {
+    default: Date.now,
+    type: Date,
+    required: true,
+  },
+});
+
 const partnerSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -60,16 +94,8 @@ const partnerSchema = new mongoose.Schema({
       ref: "campaigns",
     },
   ],
-  invoicesUrl: [{
-    type: String,
-    required: false,
-    default: "",
-  }],
-  contractsUrl: [{
-    type: String,
-    required: false,
-    default: "",
-  }],
+  invoices: [invoiceAndContractsSchema],
+  contracts: [invoiceAndContractsSchema],
   createdAt: {
     default: Date.now,
     type: Date,

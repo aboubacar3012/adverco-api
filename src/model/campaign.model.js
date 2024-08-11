@@ -27,6 +27,31 @@ const CampaignDataSchema = new mongoose.Schema({
   },
 });
 
+const reportSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  link: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    default: Date.now,
+    type: Date,
+    required: true,
+  },
+  updatedAt: {
+    default: Date.now,
+    type: Date,
+    required: true,
+  },
+});
+
 
 
 const campaignSchema = new mongoose.Schema({
@@ -82,6 +107,7 @@ const campaignSchema = new mongoose.Schema({
     required: true
   },
   data: [CampaignDataSchema],
+  report: reportSchema,
   createdAt: {
     default: Date.now,
     type: Date,
