@@ -13,6 +13,16 @@ const CampaignDataSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  latitude: {
+    type: String,
+    default: "0",
+    required: true,
+  },
+  longitude: {
+    type: String,
+    default: "0",
+    required: true,
+  },
   duration: {
     type: String,
     required: true,
