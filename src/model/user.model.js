@@ -44,9 +44,9 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: true,
   },
-  partnerId: {
+  clientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "partners",
+    ref: "clients",
     required: false,
     default: null,
   },

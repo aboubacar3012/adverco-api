@@ -34,7 +34,7 @@ const invoiceAndContractsSchema = new mongoose.Schema({
   },
 });
 
-const partnerSchema = new mongoose.Schema({
+const clientSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -108,7 +108,7 @@ const partnerSchema = new mongoose.Schema({
   },
 });
 
-// partnerSchema.set("toJSON", {
+// clientSchema.set("toJSON", {
 //   transform: (document, returnedObject) => {
 //     returnedObject.id = returnedObject._id.toString();
 //     delete returnedObject._id;
@@ -116,4 +116,4 @@ const partnerSchema = new mongoose.Schema({
 //   },
 // });
 
-module.exports = mongoose.model("partners", partnerSchema);
+module.exports = mongoose.model("clients", clientSchema);

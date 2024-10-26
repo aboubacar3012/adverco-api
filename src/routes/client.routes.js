@@ -2,19 +2,19 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 
-const Partner = require("../model/partner.model");
+const Client = require("../model/client.model");
 
-// Get all partners
+// Get all clients
 router.get("/", async (request, response) => {
   try {
-    const partners = await Partner.find()
+    const clients = await Client.find()
       .populate("users")
       // sort by updatedAt
       .sort({ createdAt: -1 })
       .lean();
     response.json({
       success: true,
-      partners,
+      clients,
     });
   }
   catch (e) {
@@ -22,23 +22,23 @@ router.get("/", async (request, response) => {
   }
 });
 
-// Get partner by ID
+// Get client by ID
 router.get("/:id", async (request, response) => {
   try {
-    const partnerId = request.params.id;
+    const clientId = request.params.id;
     // verifier si l'id est valid
-    if (!mongoose.isValidObjectId(partnerId))
+    if (!mongoose.isValidObjectId(clientId))
       return response.status(200).json({
         success: false,
-        message: "l'ID de cet partner n'existe pas",
+        message: "l'ID de cet client n'existe pas",
       });
 
-    const partner = await Partner.findById(partnerId)
+    const client = await Client.findById(clientId)
       .populate("users")
       .populate("campaigns")
       .lean(); // convert to json
-    if (partner) {
-      return response.status(200).json({ success: true, partner });
+    if (client) {
+      return response.status(200).json({ success: true, client });
     }
     else {
       return response
@@ -50,23 +50,23 @@ router.get("/:id", async (request, response) => {
   }
 });
 
-// get partner by ID
+// get client by ID
 // router.get("/:id", middleware.isAuthenticated, (request, response) => {
 //   try {
-//     const partnerId = request.params.id;
+//     const clientId = request.params.id;
 //     // verifier si l'id est valid
-//     if (!mongoose.isValidObjectId(partnerId))
+//     if (!mongoose.isValidObjectId(clientId))
 //       return response.status(200).json({
 //         success: false,
-//         message: "l'ID de cet partner n'existe pas",
+//         message: "l'ID de cet client n'existe pas",
 //       });
 
-//     Partner.findById(partnerId)
-//       .populate("partnerId")
+//     Client.findById(clientId)
+//       .populate("clientId")
 //       // .lean()
-//       .then((partners) => {
-//         if (partners) {
-//           return response.status(200).json({ sucess: true, partners });
+//       .then((clients) => {
+//         if (clients) {
+//           return response.status(200).json({ sucess: true, clients });
 //         } else {
 //           return response
 //             .status(200)
@@ -79,7 +79,7 @@ router.get("/:id", async (request, response) => {
 //   }
 // });
 
-// Create a new partner
+// Create a new client
 router.post("/create", async (request, response) => {
   try {
     if (!request.body) {
@@ -99,17 +99,17 @@ router.post("/create", async (request, response) => {
       postalCode,
       city
     } = request.body;
-    const findPartner = await Partner.findOne({ email });
+    const findClient = await Client.findOne({ email });
 
-    if (findPartner) {
+    if (findClient) {
       return response.status(200).json({
         success: false,
-        message: "Ce partner est déjà enregistré",
-        partner: findPartner,
+        message: "Ce client est déjà enregistré",
+        client: findClient,
       });
     }
 
-    const partner = new Partner({
+    const client = new Client({
       logo,
       name,
       description,
@@ -122,31 +122,31 @@ router.post("/create", async (request, response) => {
       city
     });
 
-    await partner.save();
-    response.json({ success: true, partner });
+    await client.save();
+    response.json({ success: true, client });
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });
   }
 });
 
 
-// Update partner
+// Update client
 // middleware.isAuthenticated,
 router.put("/update/:id", (request, response) => {
   try {
-    const partnerId = request.params.id;
+    const clientId = request.params.id;
     // verifier si l'id est valid
-    if (!mongoose.isValidObjectId(partnerId))
+    if (!mongoose.isValidObjectId(clientId))
       return response.status(200).json({
         success: false,
-        message: "l'ID de cet partner n'existe pas",
+        message: "l'ID de cet client n'existe pas",
       });
 
-    Partner.findByIdAndUpdate(partnerId, { ...request.body }, { new: true }).then(
+    Client.findByIdAndUpdate(clientId, { ...request.body }, { new: true }).then(
       (updated) => {
         if (updated)
           return response.status(200).json({
-            partner: updated,
+            client: updated,
             success: true,
             message: "Mise a jour reussie avec success",
           });
@@ -161,20 +161,20 @@ router.put("/update/:id", (request, response) => {
   }
 });
 
-// Delete partner
+// Delete client
 // middleware.isAuthenticated,
 router.delete("/delete/:id", (request, response) => {
   try {
-    const partnerId = request.params.id;
+    const clientId = request.params.id;
     // verifier si l'id est valid
-    if (!mongoose.isValidObjectId(partnerId))
+    if (!mongoose.isValidObjectId(clientId))
       return response.status(200).json({
         success: false,
-        message: "l'ID de cet partner n'existe pas",
+        message: "l'ID de cet client n'existe pas",
       });
 
-    Partner.findByIdAndRemove(partnerId).then((deletedPartner) => {
-      if (deletedPartner)
+    Client.findByIdAndRemove(clientId).then((deletedClient) => {
+      if (deletedClient)
         return response.status(200).json({
           success: true,
           message: "Utilisateur supprimé avec succès",
@@ -194,24 +194,24 @@ router.delete("/delete/:id", (request, response) => {
 // Add invoice or contract
 router.post("/add/:type/:id", async (request, response) => {
   try {
-    const partnerId = request.params.id;
+    const clientId = request.params.id;
     const type = request.params.type;
     const body = request.body;
     body.createdAt = new Date();
     body.updatedAt = new Date();
     body.type = type;
     // verifier si l'id est valid
-    if (!mongoose.isValidObjectId(partnerId))
+    if (!mongoose.isValidObjectId(clientId))
       return response.status(200).json({
         success: false,
-        message: "l'ID de cet partner n'existe pas",
+        message: "l'ID de cet client n'existe pas",
       });
 
-    const partner = await Partner.findById(partnerId);
-    if (!partner) {
+    const client = await Client.findById(clientId);
+    if (!client) {
       return response.status(200).json({
         success: false,
-        message: "Partenaire non trouvé",
+        message: "Client non trouvé",
       });
     }
 
@@ -223,14 +223,14 @@ router.post("/add/:type/:id", async (request, response) => {
     }
 
     if(type === "invoice") {
-      partner?.invoices.push(body);
+      client?.invoices.push(body);
     }else if(type === "contract") {
-      partner?.contracts.push(body);
+      client?.contracts.push(body);
     }
 
-    const updatedPartner = await partner?.save();
+    const updatedClient = await client?.save();
     
-    return response.status(200).json({ success: true, partner:updatedPartner });
+    return response.status(200).json({ success: true, client:updatedClient });
 
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });
@@ -238,23 +238,23 @@ router.post("/add/:type/:id", async (request, response) => {
 })
 
 // delete invoice or contract
-router.delete("/delete/:type/:partnerId/:docId", async (request, response) => {
+router.delete("/delete/:type/:clientId/:docId", async (request, response) => {
   try {
-    const partnerId = request.params.partnerId;
+    const clientId = request.params.clientId;
     const type = request.params.type;
     const docId = request.params.docId;
     // verifier si l'id est valid
-    if (!mongoose.isValidObjectId(partnerId))
+    if (!mongoose.isValidObjectId(clientId))
       return response.status(200).json({
         success: false,
-        message: "l'ID de cet partner n'existe pas",
+        message: "l'ID de cet client n'existe pas",
       });
 
-    const partner = await Partner.findById(partnerId);
-    if (!partner) {
+    const client = await Client.findById(clientId);
+    if (!client) {
       return response.status(200).json({
         success: false,
-        message: "Partenaire non trouvé",
+        message: "Client non trouvé",
       });
     }
 
@@ -266,14 +266,14 @@ router.delete("/delete/:type/:partnerId/:docId", async (request, response) => {
     }
 
     if(type === "invoice") {
-      partner?.invoices.pull(docId); // cela supprime l'élément du tableau par son id
+      client?.invoices.pull(docId); // cela supprime l'élément du tableau par son id
     }else if(type === "contract") {
-      partner?.contracts.pull(docId);
+      client?.contracts.pull(docId);
     }
 
-    const updatedPartner = await partner?.save();
+    const updatedClient = await client?.save();
     
-    return response.status(200).json({ success: true, partner:updatedPartner });
+    return response.status(200).json({ success: true, client:updatedClient });
 
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });

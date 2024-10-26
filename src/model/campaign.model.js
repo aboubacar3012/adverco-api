@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const CampaignDataSchema = new mongoose.Schema({
+  vehicleId: {
+    type: String,
+    required: true,
+  },
   startDate: {
     type: String,
     required: true,
@@ -79,9 +83,9 @@ const campaignSchema = new mongoose.Schema({
     default: "INPROGRESS",
     required: true,
   },
-  partnerId: {
+  clientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "partners",
+    ref: "clients",
     required: true,
   },
   objective: {

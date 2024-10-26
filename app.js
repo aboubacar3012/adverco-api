@@ -9,7 +9,7 @@ const session = require("express-session");
 const { v4: uuidv4 } = require("uuid");
 
 const usersRouter = require("./src/routes/user.routes");
-const partnersRouter = require("./src/routes/partner.routes");
+const clientsRouter = require("./src/routes/client.routes");
 const campaignsRouter = require("./src/routes/campaign.routes");
 
 const app = express();
@@ -25,7 +25,7 @@ app.use(middleware.errorHandler);
 app.use(middleware.requestLogger);
 
 app.use("/api/users", usersRouter);
-app.use("/api/partners", partnersRouter);
+app.use("/api/clients", clientsRouter);
 app.use("/api/campaigns", campaignsRouter);
 
 app.use(middleware.unknownEndpoint);

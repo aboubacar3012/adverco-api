@@ -3,13 +3,13 @@ const router = express.Router();
 const mongoose = require("mongoose");
 
 const Campaign = require("../model/campaign.model");
-const Partner = require("../model/partner.model");
+const Client = require("../model/client.model");
 
 // Get all campaigns
 router.get("/", async (request, response) => {
   try {
     const campaigns = await Campaign.find()
-      .populate("partnerId")
+      .populate("clientId")
       // sort by updatedAt
       .sort({ createdAt: -1 })
       .lean();
@@ -36,7 +36,7 @@ router.get("/:id", (request, response) => {
       });
 
     Campaign.findById(campaignId)
-      .populate("partnerId")
+      .populate("clientId")
       .lean()
       .then((campaign) => {
         if (campaign) {
@@ -65,7 +65,7 @@ router.post("/create", async (request, response) => {
       name,
       description,
       status,
-      partnerId,
+      clientId,
       objective,
       tool,
       budget,
@@ -76,12 +76,12 @@ router.post("/create", async (request, response) => {
       numberOfTrucks,
       numberOfFaces,
     } = request.body;
-    
+
     const campaign = new Campaign({
       name,
       description,
       status,
-      partnerId,
+      clientId,
       objective,
       tool,
       budget,
@@ -93,12 +93,12 @@ router.post("/create", async (request, response) => {
       numberOfFaces,
     });
 
-    const partner = await Partner.findById(partnerId);
-    if (!partner) {
-      return response.status(404).json({ success: false, message: "Partenaire non trouvé" });
+    const client = await Client.findById(clientId);
+    if (!client) {
+      return response.status(404).json({ success: false, message: "Client non trouvé" });
     }
-    partner.campaigns.push(campaign._id);
-    await Promise.all([campaign.save(), partner.save()]);
+    client.campaigns.push(campaign._id);
+    await Promise.all([campaign.save(), client.save()]);
     response.json({ success: true, campaign });
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });
@@ -137,57 +137,81 @@ router.put("/update/:id", (request, response) => {
   }
 });
 
-// Add data to campaign
-router.put("/update/data/:id", async (request, response) => {
+// Route pour mettre à jour les données de la campagne
+router.put('/update/data/:id', async (request, response) => {
   try {
     const campaignId = request.params.id;
     const data = request.body;
 
-    // verifier si l'id est valid
-    if (!mongoose.isValidObjectId(campaignId))
-      return response.status(200).json({
+    // Vérifier si l'id est valide
+    if (!mongoose.isValidObjectId(campaignId)) {
+      return response.status(400).json({
         success: false,
-        message: "l'ID de cette campaign n'existe pas",
+        message: "L'ID de cette campagne est invalide",
       });
+    }
 
-      const campaign = await Campaign.findById(campaignId);
+    const campaign = await Campaign.findById(campaignId).lean();
 
-      if (!campaign) {
-        return response.status(404).json({ success: false, message: "Campagne non trouvé" });
-      }
+    if (!campaign) {
+      return response.status(404).json({
+        success: false,
+        message: "Campagne non trouvée",
+      });
+    }
 
-      // Filtrer les données pour vérifier les duplications
+    // Vérifier si campaign.data existe, sinon le créer
+    if (!campaign.data) {
+      campaign.data = [];
+    }
+
+    // Filtrer les données pour vérifier les duplications
     const existingData = campaign.data;
+    console.log(existingData.length);
+    console.log(data.length);
     let newData = [];
-    if(existingData && existingData.length > 0) {
+    let foundDuplicate = null;
+    if (existingData && existingData.length > 0) {
       for (let i = 0; i < data.length; i++) {
-        const foundDuplicate = existingData.find((existingData) => existingData.startDate === data[i].startDate && existingData.endDate === data[i].endDate);
-        if (!foundDuplicate) {
-          newData.push(data[i]);
-        }else{
-          return response.status(200).json({ success: false, message: "Vous essayez d'insérer des données qui existent déjà" });
-        }
+        foundDuplicate = existingData.find(
+          (existingData) =>
+            existingData.startDate === data[i].startDate &&
+            existingData.endDate === data[i].endDate &&
+            existingData.address === data[i].address &&
+            existingData.duration === data[i].duration &&
+            existingData.distance === data[i].distance &&
+            existingData.vehicleId === data[i].vehicleId &&
+            existingData.date === data[i].date &&
+            existingData.latitude === data[i].latitude &&
+            existingData.longitude === data[i].longitude
+        );
+        console.log(foundDuplicate);
+        if (foundDuplicate) return response.status(200).json({ success: false, message: "Vous essayez d'insérer des données qui existent déjà" });
+        if (!foundDuplicate) newData.push(data[i])
       }
-    }else{
+    } else {
       newData = data;
     }
-      
+
+
+
     // Ajouter les nouvelles données
     campaign.data.push(...newData);
 
     // Sauvegarder la campagne mise à jour
-    const updatedCampaign = await campaign.save();
+    // enlever lean() pour pouvoir modifier la campagne
+    const updatedCampaign = await Campaign.findByIdAndUpdate(campaignId, { data: campaign.data }, { new: true });
 
     return response.status(200).json({
       campaign: updatedCampaign,
       success: true,
       message: "Mise à jour réussie avec succès",
     });
-
   } catch (e) {
-    return response.status(200).json({ success: false, error: e.message });
+    return response.status(500).json({ success: false, error: e.message });
   }
 });
+
 
 // Update report
 router.put("/update/report/:id", async (request, response) => {
@@ -202,11 +226,11 @@ router.put("/update/report/:id", async (request, response) => {
         message: "l'ID de cette campaign n'existe pas",
       });
 
-      const campaign = await Campaign.findById(campaignId);
+    const campaign = await Campaign.findById(campaignId);
 
-      if (!campaign) {
-        return response.status(404).json({ success: false, message: "Campagne non trouvé" });
-      }
+    if (!campaign) {
+      return response.status(404).json({ success: false, message: "Campagne non trouvé" });
+    }
 
     campaign.report = report;
 
@@ -226,7 +250,7 @@ router.put("/update/report/:id", async (request, response) => {
 
 // Delete campaign
 // middleware.isAuthenticated,
-router.delete("/delete/:id",  (request, response) => {
+router.delete("/delete/:id", (request, response) => {
   try {
     const campaignId = request.params.id;
     // verifier si l'id est valid

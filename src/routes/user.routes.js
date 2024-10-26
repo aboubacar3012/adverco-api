@@ -7,7 +7,7 @@ const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 
 const User = require("../model/user.model");
-const Partner = require("../model/partner.model");
+const Client = require("../model/client.model");
 
 // send sms
 // router.post("/sendsms", async (request, response) => {
@@ -33,7 +33,7 @@ const Partner = require("../model/partner.model");
 router.get("/", async (request, response) => {
   try {
     const users = await User.find()
-      .populate("partnerId")
+      .populate("clientId")
       // sort by updatedAt
       .sort({ createdAt: -1 })
       .lean();
@@ -59,7 +59,7 @@ router.get("/:id", middleware.isAuthenticated, (request, response) => {
       });
 
     User.findById(userId)
-      .populate("partnerId")
+      .populate("clientId")
       // .lean()
       .then((users) => {
         if (users) {
@@ -84,7 +84,7 @@ router.post("/create", async (request, response) => {
         .status(200)
         .json({ success: false, message: "Veuillez remplir tous les champs" });
     }
-    const { firstName, lastName, email, role, phone, password, partnerId } =
+    const { firstName, lastName, email, role, phone, password, clientId } =
       request.body;
     const findUser = await User.findOne({ email });
     if (findUser) {
@@ -101,15 +101,15 @@ router.post("/create", async (request, response) => {
       role,
       phone,
       password,
-      partnerId,
+      clientId,
     });
 
-    const partner = await Partner.findById(partnerId);
-    if (partner) {
-      partner?.users?.push(user._id);
-      await partner.save();
+    const client = await Client.findById(clientId);
+    if (client) {
+      client?.users?.push(user._id);
+      await client.save();
       await user.save();
-      console.log(partner);
+      console.log(client);
       console.log(user);
       response.json({ success: true, user });
     }
@@ -124,7 +124,7 @@ router.post("/create", async (request, response) => {
 router.post("/login", async (request, response) => {
   try {
     const { email, password } = request.body;
-    const user = await User.findOne({ email }).populate("partnerId");
+    const user = await User.findOne({ email }).populate("clientId");
     
     if (!user) {
       return response.json({
