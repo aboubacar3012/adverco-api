@@ -109,12 +109,12 @@ router.post("/create", async (request, response) => {
       client?.users?.push(user._id);
       await client.save();
       await user.save();
-      console.log(client);
-      console.log(user);
+      // console.log(client);
+      // console.log(user);
       response.json({ success: true, user });
     }
 
-   
+
   } catch (e) {
     return response.status(200).json({ success: false, error: e.message });
   }
@@ -125,7 +125,7 @@ router.post("/login", async (request, response) => {
   try {
     const { email, password } = request.body;
     const user = await User.findOne({ email }).populate("clientId");
-    
+
     if (!user) {
       return response.json({
         success: false,

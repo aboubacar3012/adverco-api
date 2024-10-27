@@ -167,8 +167,8 @@ router.put('/update/data/:id', async (request, response) => {
 
     // Filtrer les données pour vérifier les duplications
     const existingData = campaign.data;
-    console.log(existingData.length);
-    console.log(data.length);
+    // console.log(existingData.length);
+    // console.log(data.length);
     let newData = [];
     let foundDuplicate = null;
     if (existingData && existingData.length > 0) {
@@ -185,7 +185,7 @@ router.put('/update/data/:id', async (request, response) => {
             existingData.latitude === data[i].latitude &&
             existingData.longitude === data[i].longitude
         );
-        console.log(foundDuplicate);
+        // console.log(foundDuplicate);
         if (foundDuplicate) return response.status(200).json({ success: false, message: "Vous essayez d'insérer des données qui existent déjà" });
         if (!foundDuplicate) newData.push(data[i])
       }
