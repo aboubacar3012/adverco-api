@@ -248,6 +248,62 @@ router.put("/update/report/:id", async (request, response) => {
   }
 });
 
+// Delete data from campaign
+router.delete("/delete/data", async (request, response) => {
+  try {
+    const dataIds = request.query.dataIds.split(',');
+    const campaignId = request.query.campaignId;
+
+    if (!dataIds || !campaignId) {
+      return response.status(400).json({
+        success: false,
+        message: "Veuillez fournir les IDs des données et l'ID de la campagne",
+      });
+    }
+
+    // Vérifier si les IDs sont valides
+    if (!dataIds.every(id => mongoose.isValidObjectId(id)) || !mongoose.isValidObjectId(campaignId)) {
+      return response.status(400).json({
+        success: false,
+        message: "L'ID de cette campagne ou de certaines données est invalide",
+      });
+    }
+
+    const campaign = await Campaign.findById(campaignId).lean();
+
+    if (!campaign) {
+      return response.status(404).json({
+        success: false,
+        message: "Campagne non trouvée",
+      });
+    }
+
+    // Supprimer les données
+    const dataToDelete = campaign.data.filter((item) => dataIds.includes(item._id.toString()));
+    if (dataToDelete.length === 0) {
+      return response.status(404).json({
+        success: false,
+        message: "Aucune donnée trouvée pour les IDs fournis",
+      });
+    }
+
+    // Sauvegarder la campagne mise à jour
+    // enlever lean() pour pouvoir modifier la campagne
+    const updatedCampaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { $pull: { data: { _id: { $in: dataIds } } } },
+      { new: true }
+    );
+
+    return response.status(200).json({
+      campaign: updatedCampaign,
+      success: true,
+      message: "Suppression des données réussie avec succès",
+    });
+  } catch (e) {
+    return response.status(500).json({ success: false, error: e.message });
+  }
+});
 // Delete campaign
 // middleware.isAuthenticated,
 router.delete("/delete/:id", (request, response) => {
@@ -275,5 +331,9 @@ router.delete("/delete/:id", (request, response) => {
     return response.status(200).json({ success: false, error: e.message });
   }
 });
+
+
+
+
 
 module.exports = router;
